@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Update and upgrade system packages
+echo "Updating and upgrading system packages..."
+apt-get update && apt-get upgrade -y
+
+# Install fail2ban
+echo "Installing fail2ban..."
+apt-get install -y fail2ban
+
+# Configure fail2ban
+echo "Configuring fail2ban..."
+cat <<EOT > /etc/fail2ban/jail.local
+[sshd]
+enabled = true
+port    = ssh
+logpath = /var/log/auth.log
+maxretry = 5
+
+[apache]
+enabled = true
+port    = http,https
+logpath = /var/log/apache2/access.log
+EOT
+
+# Set up a firewall using UFW
+echo "Setting up UFW firewall..."
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow ssh
+ufw allow http
+ufw allow https
+ufw enable
+
+# Secure SSH configuration
+echo "Securing SSH configuration..."
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+cp config/sshd_config /etc/ssh/sshd_config
+systemctl restart sshd
+
+# Disable root login
+echo "Disabling root login..."
+passwd -l root
+
+# Install and configure automatic security updates
+echo "Installing and configuring automatic security updates..."
+apt-get install -y unattended-upgrades
+dpkg-reconfigure --priority=low unattended-upgrades
+
+echo "Security enhancements completed. Rebooting server..."
+reboot
