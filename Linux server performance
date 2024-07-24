@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Update and upgrade system packages
+echo "Updating and upgrading system packages..."
+apt-get update && apt-get upgrade -y
+
+# Install performance-related tools
+echo "Installing performance tools..."
+apt-get install -y htop iotop sysstat
+
+# Optimize system settings
+echo "Optimizing system settings..."
+sysctl -w net.ipv4.ip_local_port_range="1024 65535"
+sysctl -w net.core.somaxconn=1024
+sysctl -w net.core.netdev_max_backlog=10000
+sysctl -w vm.swappiness=10
+sysctl -p
+
+# Adjust the number of file descriptors
+echo "Adjusting the number of file descriptors..."
+echo '* soft nofile 65535' >> /etc/security/limits.conf
+echo '* hard nofile 65535' >> /etc/security/limits.conf
+
+# Optimize I/O settings
+echo "Optimizing I/O settings..."
+echo 'noop' > /sys/block/sda/queue/scheduler
+
+# Reboot the server to apply changes
+echo "Rebooting the server to apply changes..."
+reboot
